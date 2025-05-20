@@ -1,0 +1,140 @@
+services:
+  build-base:
+    build:
+      context: base
+    image: airspark/base
+    profiles:
+      - build
+
+  build-hadoop:
+    build:
+      context: hadoop
+    image: airspark/hadoop
+    profiles:
+      - build
+
+  build-hms:
+    build:
+      context: hms
+    image: airspark/hms
+    profiles:
+      - build
+
+  build-spark:
+    build:
+      context: spark
+    image: airspark/spark
+    profiles:
+      - build
+
+  build-airflow:
+    build:
+      context: airflow
+    image: airspark/airflow
+    profiles:
+      - build
+
+  init-hadoop:
+    command:
+      - -c
+      - |
+        cp /data/init_hadoop/hadoop_conf_dir/core-site.xml $$HADOOP_CONF_DIR/
+        mkdir -p /run/hdfs/namenode
+        mkdir -p /run/hdfs/datanode
+        chown -R hadoop:hadoop /run/hdfs
+        hdfs --config $$HADOOP_CONF_DIR namenode -format
+        service ssh start
+        start-dfs.sh
+        hdfs dfs -mkdir -p "/user/hadoop/warehouse"
+        hdfs dfs -mkdir -p "/user/spark/warehouse"
+        hdfs dfs -mkdir -p "/var/log/spark/apps"
+        hdfs dfs -chown -R hadoop:hadoop "/user/hadoop"
+        hdfs dfs -chown -R spark:hadoop "/user/spark"
+        hdfs dfs -chmod -R g+w "/user"
+        stop-dfs.sh
+        service ssh stop
+    image: airspark/hadoop
+    profiles:
+      - init
+    volumes:
+      - ./init_hadoop:/data/init_hadoop
+      - pv-hdfs:/run/hdfs
+      - pv-hadoop-log:/usr/lib/hadoop/logs
+
+  init-hms:
+    command:
+      - /usr/lib/hive/bin/schematool
+      - -initSchema
+      - -dbType
+      - derby
+    image: airspark/hms
+    profiles:
+      - init
+    volumes:
+      - pv-hms:/data/hms/warehouse
+    working_dir: /data/hms/warehouse
+
+  init-spark:
+    command:
+      - -c
+      - |
+        chown -R spark:hadoop /usr/lib/spark/logs
+    image: airspark/spark
+    profiles:
+      - init
+    user: root
+    volumes:
+      - pv-spark-log:/usr/lib/spark/logs
+
+  hadoop:
+    command:
+      - -c
+      - |
+        service ssh start
+        $$HADOOP_HOME/sbin/start-dfs.sh
+        touch /tmp/hdfs_tail
+        tail -f /tmp/hdfs_tail
+    image: airspark/hadoop
+    volumes:
+      - pv-hdfs:/run/hdfs
+      - pv-hadoop-log:/usr/lib/hadoop/logs
+
+  hms:
+    command:
+      - /usr/lib/hive/bin/start-metastore
+    image: airspark/hms
+    volumes:
+      - pv-hms:/data/hms/warehouse
+    working_dir: /data/hms/warehouse
+
+  spark:
+    command:
+      - -c
+      - |
+        $$SPARK_HOME/sbin/start-master.sh
+        touch /tmp/spark_tail
+        tail -f /tmp/spark_tail
+    entrypoint: ["/bin/bash"]
+    image: airspark/spark
+    volumes:
+      - pv-spark-log:/usr/lib/spark/logs
+
+  airflow:
+    command:
+      - airflow
+      - standalone
+    environment:
+      AIRFLOW__CORE__DAGS_FOLDER: "/home/airflow/dags"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    image: airspark/airflow
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - ./dags:/home/airflow/dags
+
+volumes:
+  pv-hdfs:
+  pv-hms:
+  pv-hadoop-log:
+  pv-spark-log:
