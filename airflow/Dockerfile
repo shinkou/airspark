@@ -1,4 +1,4 @@
-FROM airspark/spark
+FROM shinkou/airspark-spark
 USER root
 ARG VIRTUAL_ENV_DIR
 ENV VIRTUAL_ENV_DIR=${VIRTUAL_ENV_DIR:-/venv/py3_12}

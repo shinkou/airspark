@@ -1,4 +1,4 @@
-FROM airspark/hadoop
+FROM shinkou/airspark-hadoop
 ARG HIVE_VERSION
 ENV HIVE_VERSION=${HIVE_VERSION:-3.0.0}
 ENV HIVE_HOME=/usr/lib/hive

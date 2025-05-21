@@ -1,4 +1,4 @@
-FROM airspark/hadoop
+FROM shinkou/airspark-hadoop
 ARG SPARK_VERSION
 ENV SPARK_VERSION=${SPARK_VERSION:-3.5.5}
 ENV SPARK_HOME=/usr/lib/spark

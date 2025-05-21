@@ -1,4 +1,4 @@
-FROM airspark/base
+FROM shinkou/airspark-base
 ARG HADOOP_VERSION
 ENV HADOOP_VERSION=${HADOOP_VERSION:-3.4.1}
 ENV HADOOP_HOME=/usr/lib/hadoop

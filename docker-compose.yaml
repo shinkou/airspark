@@ -2,35 +2,35 @@ services:
   build-base:
     build:
       context: base
-    image: airspark/base
+    image: shinkou/airspark-base
     profiles:
       - build
 
   build-hadoop:
     build:
       context: hadoop
-    image: airspark/hadoop
+    image: shinkou/airspark-hadoop
     profiles:
       - build
 
   build-hms:
     build:
       context: hms
-    image: airspark/hms
+    image: shinkou/airspark-hms
     profiles:
       - build
 
   build-spark:
     build:
       context: spark
-    image: airspark/spark
+    image: shinkou/airspark-spark
     profiles:
       - build
 
   build-airflow:
     build:
       context: airflow
-    image: airspark/airflow
+    image: shinkou/airspark-airflow
     profiles:
       - build
 
@@ -53,7 +53,7 @@ services:
         hdfs dfs -chmod -R g+w "/user"
         stop-dfs.sh
         service ssh stop
-    image: airspark/hadoop
+    image: shinkou/airspark-hadoop
     profiles:
       - init
     volumes:
@@ -67,7 +67,7 @@ services:
       - -initSchema
       - -dbType
       - derby
-    image: airspark/hms
+    image: shinkou/airspark-hms
     profiles:
       - init
     volumes:
@@ -79,7 +79,7 @@ services:
       - -c
       - |
         chown -R spark:hadoop /usr/lib/spark/logs
-    image: airspark/spark
+    image: shinkou/airspark-spark
     profiles:
       - init
     user: root
@@ -94,7 +94,7 @@ services:
         $$HADOOP_HOME/sbin/start-dfs.sh
         touch /tmp/hdfs_tail
         tail -f /tmp/hdfs_tail
-    image: airspark/hadoop
+    image: shinkou/airspark-hadoop
     volumes:
       - pv-hdfs:/run/hdfs
       - pv-hadoop-log:/usr/lib/hadoop/logs
@@ -102,7 +102,7 @@ services:
   hms:
     command:
       - /usr/lib/hive/bin/start-metastore
-    image: airspark/hms
+    image: shinkou/airspark-hms
     volumes:
       - pv-hms:/data/hms/warehouse
     working_dir: /data/hms/warehouse
@@ -115,7 +115,7 @@ services:
         touch /tmp/spark_tail
         tail -f /tmp/spark_tail
     entrypoint: ["/bin/bash"]
-    image: airspark/spark
+    image: shinkou/airspark-spark
     volumes:
       - pv-spark-log:/usr/lib/spark/logs
 
@@ -126,7 +126,7 @@ services:
     environment:
       AIRFLOW__CORE__DAGS_FOLDER: "/home/airflow/dags"
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    image: airspark/airflow
+    image: shinkou/airspark-airflow
     ports:
       - "8080:8080"
     restart: always
